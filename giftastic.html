@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Giftastic!</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+
+    <style>
+        .btn-space {margin: 2px;}
+
+        .gif-entry {
+            display: inline-block;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12 d-flex justify-content-center">
+                <h1>Movies and TV Shows Gif Library!</h1>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div id="buttons-go-here">
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-10">
+                <div id="gifs-appear-here">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <form id="gif-form">
+                    <label for="gif-input">Add a gif topic!</label>
+                    <input type="text" id="gif-input"><br>
+
+                    <input id="add-gif" type="submit" class="btn btn-info" value="Submit">
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script type="text/javascript">
+        var topics = ["Bob's Burgers", "Titanic", "A Simple Favor", "Luther", "Crazy Rich Asians", "Downton Abbey", "Ocean's 8", "Community", "Into the Spiderverse"];
+
+        function renderButtons() {
+
+            $("#buttons-go-here").empty();
+            for (var i = 0; i < topics.length; i++) {
+
+                var a = $("<button>");
+                a.addClass("topic btn btn-info btn-space");
+                a.attr("data-name", topics[i]);
+                a.text(topics[i]);
+                $("#buttons-go-here").append(a);
+            }
+        }
+
+        function displayMovieInfo() {
+
+            var gifTopic = $(this).attr("data-name");
+            var queryURL = "https://api.giphy.com/v1/gifs/search?q=" + gifTopic + "&api_key=bgFc3j5bAhw8FhVoS6sWFhfWUZWXyapz";
+
+            $.ajax({
+                url: queryURL,
+                method: "GET"
+            }).then(function (response) {
+                console.log(response);
+                var results = response.data;
+
+                for (var i = 0; i < 10; i++) {
+                    var result = results[i];
+                    //console.log(result);
+
+                    var gifDiv = $("<span>");
+                    gifDiv.addClass('gif-entry');
+                    var p = $("<p>");
+                    p.text(result.rating).width(50);
+                    var gifImage = $("<img>");
+                    $(gifImage).addClass("gifWhole");
+                    gifImage.attr("src", result.images.fixed_height_still.url);
+                    gifImage.attr("data-state", "still");
+                    gifImage.attr("data-still", result.images.fixed_height_still.url);
+                    gifImage.attr("data-animate", result.images.fixed_height.url);
+                    gifDiv.append(p);
+                    gifDiv.append(gifImage);
+                    $("#gifs-appear-here").prepend(gifDiv);
+
+                }
+            });
+        }
+
+
+        $("#add-gif").on("click", function (event) {
+            event.preventDefault();
+            var topic = $("#gif-input").val().trim();
+            topics.push(topic);
+
+            renderButtons();
+        });
+
+        $(document).on("click", ".topic", displayMovieInfo);
+
+        $(document).on("click", ".gifWhole", function () {
+            console.log("clicked");
+
+            var elementClicked = $(this);
+            var urlOfAnimatedGif = elementClicked.attr('data-animate');
+            var urlOfStillGif = elementClicked.attr('data-still');
+            var state = $(this).attr('data-state');
+
+            //$(this).attr("src", urlOfAnimatedGif);
+
+            if (state === "still") {
+                var urlAnimatedImage = $(this).attr("data-animate");
+                $(this).attr("src", urlAnimatedImage);
+                $(this).attr("data-state", "animate");
+            }
+
+            else if (state === "animate") {
+                var urlStillImage = $(this).attr("data-still");
+                $(this).attr("src", urlStillImage);
+                $(this).attr("data-state", "still");
+            }
+        });
+
+        renderButtons();
+
+    </script>
+</body>
+
+</html>
